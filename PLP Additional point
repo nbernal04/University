@@ -1,0 +1,135 @@
+data = {
+    "Job": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
+            "11", "12", "13", "14", "15", "16", "17", "18", "19"],
+    "Processing Time": [15,14,15,4,13,8,16,8,12,5,14,12,16,6,4,16,8,11,3],
+    "Due Date": [8,4,7,5,15,12,3,7,15,6,9,17,14,5,20,14,8,16,16],
+}
+prec = {
+    "1": ["6"],
+    "2": ["6", "7", "8"],
+    "3": ["7"],
+    "4": ["8"],
+    "5": [],
+    "6": ["17"],
+    "7": ["9"],
+    "8": ["12", "19"],
+    "9": ["10", "11", "12"],
+    "10": ["13"],
+    "11": ["13"],
+    "12": ["13"],
+    "13": ["14", "15"],
+    "14": ["16"],
+    "15": ["16"],
+    "16": ["18", "17", "19"],
+    "17": [],
+    "18": [],
+    "19": [],
+}
+
+# Get the inverse of prec
+def get_succ(prec):
+    succ = {}
+    for job in prec:
+        succ[job] = []
+    for job in prec:
+        for p in prec[job]:
+            succ[p].append(job)
+    return succ
+
+
+
+def Lawlers_algorithm_reduce_max_lateness(data, prec):
+    """
+    data: dictionary with keys "Job", "Processing Time", "Due Date"
+    prec: dictionary with keys "Job" and values list of predecessors
+    
+    returns: list of jobs in order of processing
+    
+    Special case of Lawler's algorithm for minimizing maximum lateness
+    where hj = Cj - dj
+    """
+    # Initialize
+    jobs = data["Job"]
+    p = data["Processing Time"]
+    d = data["Due Date"]
+    
+    J = []
+    JC = jobs.copy()
+    # J_1 = Jobs with no predecessors
+    J_1 = [job for job in jobs if prec[job] == []]
+
+    # While there are jobs left in JC
+    while JC:
+        # Find the sum of all the processing times of the jobs in JC
+        Cmax = sum([p[jobs.index(job)] for job in JC])
+        # Evaluate hj for all jobs in J_1
+        h = [Cmax - d[jobs.index(job)] for job in J_1]
+        # Find the job with the minimum hj
+        j = J_1[h.index(min(h))]
+        #### Reevaluate J, JC, and J_1
+        # Add j to be the first job in J
+        J.insert(0, j)
+        # Remove j from JC
+        JC.remove(j)
+        # Delete all precedence constraints involving j
+        for job in jobs:
+            if j in prec[job]:
+                prec[job].remove(j)
+        # J_1 = Jobs with no predecessors that are not in J
+        J_1 = [job for job in jobs if prec[job] == [] and job not in J]
+    return J
+
+def get_lateness(data,order):
+    """
+    data: dictionary with keys "Job", "Processing Time", "Due Date"
+    order: list of jobs in order of processing
+
+    returns: list of lateness for each job
+    
+    lateness = Cj - dj
+    """
+    # Initialize
+    jobs = data["Job"]
+    p = data["Processing Time"]
+    d = data["Due Date"]
+    C = 0
+    lateness = []
+    # For each job in order
+    for job in order:
+        # Calculate Cj
+        C += p[jobs.index(job)]
+        # Calculate lateness
+        lateness.append(C - d[jobs.index(job)])
+    return lateness
+
+Order = Lawlers_algorithm_reduce_max_lateness(data, prec)
+print("Order:", Order)
+print("Lateness Lawler if succ:", get_lateness(data,Order))
+
+# with the prec
+
+prec = {
+    "1": ["6"],
+    "2": ["6", "7", "8"],
+    "3": ["7"],
+    "4": ["8"],
+    "5": [],
+    "6": ["17"],
+    "7": ["9"],
+    "8": ["12", "19"],
+    "9": ["10", "11", "12"],
+    "10": ["13"],
+    "11": ["13"],
+    "12": ["13"],
+    "13": ["14", "15"],
+    "14": ["16"],
+    "15": ["16"],
+    "16": ["18", "17", "19"],
+    "17": [],
+    "18": [],
+    "19": [],
+}
+prec = get_succ(prec)
+Order = Lawlers_algorithm_reduce_max_lateness(data, prec)
+print("Order:", Order)
+print("Lateness Lawler", get_lateness(data,Order))
